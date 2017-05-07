@@ -59,7 +59,7 @@ function Tcp(port) {
                 try {
                     request = JSON.parse(data);
                 } catch (err) {
-                    console.error('could not parse client message:', err);
+                    console.error('could not parse client message: \'' + data + '\'', err);
                     socket.write(new Response('', 'error', 'Request - \'' + data + '\' is not a valid JSON').getString());
 
                     return;
