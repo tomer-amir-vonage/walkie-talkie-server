@@ -1,5 +1,7 @@
 // Load the TCP Library
-net = require('net');
+var net = require('net');
+var udp = require('./udp')
+
 
 // Keep track of the chat clients
 var clients = [];
@@ -41,5 +43,8 @@ net.createServer(function (socket) {
 
 }).listen(6000);
 
+const rtp = new udp(6001);
+const rtcp = new udp(6002);
+
 // Put a friendly message on the terminal of the server.
-console.log("Chat server running at port 5000\n");
+console.log("Chat server running at port 6000\n");
