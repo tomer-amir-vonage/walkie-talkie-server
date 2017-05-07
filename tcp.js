@@ -32,6 +32,10 @@ function Tcp(port) {
 
         // Handle incoming messages from clients.
         socket.on('data', function (data) {
+            if ((data + "").startsWith('PUT / HTTP/1.1')) {
+                return;
+            }
+
             let request;
             let curr_client = client.getBySocket(socket);
 
@@ -62,6 +66,12 @@ function Tcp(port) {
 
                     // Send a nice welcome message and announce
                     socket.write(new Response('login', 'ok', 'Welcome ' + request.name).getString());
+
+                    let broadcasting = client.getBroadcasting();
+
+                    if (broadcasting)
+                        socket.write(new Response('', '', broadcasting.name, 'broadcast_start').getString());
+
                     break;
 
                 case 'broadcast_start':
@@ -70,6 +80,7 @@ function Tcp(port) {
                         return;
                     }
 
+                    socket.write(new Response('broadcast_start', 'ok').getString());
                     broadcast(new Response('', '', curr_client.name, 'broadcast_start').getString(), curr_client);
 
                     break;
@@ -88,10 +99,10 @@ function Tcp(port) {
         socket.on('end', function () {
             let curr_client = client.getBySocket(socket);
 
-            if (client.releaseBroadcast(curr_client))
+            if (curr_client && client.releaseBroadcast(curr_client))
                 broadcast(new Response('', '', curr_client.name, 'broadcast_end').getString(), curr_client);
 
-            client.removeClient(socket);
+            client.removeClient(curr_client);
         });
 
         // Send a message to all clients
@@ -101,11 +112,17 @@ function Tcp(port) {
             clients.forEach(function (curr) {
                 // Don't want to send it to sender
                 if (curr.compare(sender)) return;
-                curr.tcp.write(message);
+
+                try {
+                    curr.tcp.write(message);
+                } catch (err) {
+                    // console.error("could not send tcp to client: ", err);
+                    // client.removeClient(curr);
+                }
             });
 
             // Log it to the server output too
-            process.stdout.write(message)
+            // process.stdout.write(message)
         }
 
     }).listen(port);

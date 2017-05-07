@@ -17,6 +17,9 @@ function UDP(port, role) {
 
     server.on('message', (msg, rinfo) => {
         // console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+        if ((msg + "").startsWith('PUT / HTTP/1.1')) {
+            return;
+        }
 
         let curr_client = addClient(msg, rinfo.port, rinfo.address);
 

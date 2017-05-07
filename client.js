@@ -30,9 +30,11 @@ function Client(uuid, name) {
 }
 
 function getBySocket(socket) {
-    return _.find(clients, (curr) => {
+    let res = _.find(clients, (curr) => {
         return curr.tcp === socket;
     });
+
+    return res;
 }
 
 function getByPortAddress(port, address, role) {
@@ -68,12 +70,12 @@ function createClient(uuid, name, role, port, address) {
     return client;
 }
 
-function removeClient(socket) {
-    let client = getBySocket(socket);
-
+function removeClient(client) {
     if (client) {
         console.log("Client disconnecting: " + client.uuid);
         clients.splice(client, 1);
+    } else {
+        console.error('client is undefined');
     }
 
     console.log("-- # of clients: " + clients.length);
@@ -98,6 +100,10 @@ function releaseBroadcast(client) {
     return true;
 }
 
+function getBroadcasting() {
+    return broadcasting;
+}
+
 module.exports.clients = clients;
 
 module.exports.createClient = createClient;
@@ -111,3 +117,5 @@ module.exports.getByPortAddress = getByPortAddress;
 module.exports.setBroadcasting = setBroadcasting;
 
 module.exports.releaseBroadcast = releaseBroadcast ;
+
+module.exports.getBroadcasting = getBroadcasting;
