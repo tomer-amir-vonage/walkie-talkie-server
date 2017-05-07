@@ -11,6 +11,10 @@ function Response(request, response, data, notification) {
     this.response       = response || '';
     this.data           = data || '';
     this.notification   = notification || '';
+
+    this.getString = function() {
+        return JSON.stringify(this);
+    }
 }
 
 function Tcp(port) {
@@ -29,11 +33,13 @@ function Tcp(port) {
         // Handle incoming messages from clients.
         socket.on('data', function (data) {
             let request;
+            let curr_client = client.getBySocket(socket);
+
             try {
                 request = JSON.parse(data);
             } catch (err) {
                 console.error('could not parse client message:', err);
-                socket.write(JSON.stringify(new Response('', 'error', 'Request - \'' + data + '\' is not a valid JSON')));
+                socket.write(new Response('', 'error', 'Request - \'' + data + '\' is not a valid JSON').getString());
 
                 return;
             }
@@ -42,23 +48,36 @@ function Tcp(port) {
                 case 'login':
                     if (!request.uuid) {
                         console.error('missing field - uuid in: ' + data);
-                        socket.write(JSON.stringify(new Response('login', 'error', 'missing field \'uuid\' in: ' + data)));
+                        socket.write(new Response('login', 'error', 'missing field \'uuid\' in: ' + data).getString());
                         return;
                     }
 
                     if (!request.name) {
                         console.error('missing field - name in: ' + data);
-                        socket.write(JSON.stringify(new Response('login', 'error', 'missing field \'name\' in: ' + data)));
+                        socket.write(new Response('login', 'error', 'missing field \'name\' in: ' + data).getString());
                         return;
                     }
 
                     client.createClient(request.uuid, request.name, 'tcp', socket);
 
                     // Send a nice welcome message and announce
-                    socket.write(JSON.stringify(new Response('login', 'ok', 'Welcome ' + request.name)));
+                    socket.write(new Response('login', 'ok', 'Welcome ' + request.name).getString());
                     break;
-                case 'broadcast':
-                    broadcast(data, client.getBySocket(socket));
+
+                case 'broadcast_start':
+                    if (!client.setBroadcasting(curr_client)) {
+                        socket.write(new Response('broadcast_start', 'error', 'broadcast taken').getString());
+                        return;
+                    }
+
+                    broadcast(new Response('', '', curr_client.name, 'broadcast_start').getString(), curr_client);
+
+                    break;
+
+                case 'broadcast_end':
+                    if (client.releaseBroadcast(curr_client))
+                        broadcast(new Response('', '', curr_client.name, 'broadcast_end').getString(), curr_client);
+
                     break;
                 default:
                     break;
@@ -67,8 +86,12 @@ function Tcp(port) {
 
         // Remove the client from the list when it leaves
         socket.on('end', function () {
+            let curr_client = client.getBySocket(socket);
+
+            if (client.releaseBroadcast(curr_client))
+                broadcast(new Response('', '', curr_client.name, 'broadcast_end').getString(), curr_client);
+
             client.removeClient(socket);
-            // broadcast(socket.name + " left the chat.\n");
         });
 
         // Send a message to all clients

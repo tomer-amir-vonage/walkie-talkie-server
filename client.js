@@ -3,13 +3,14 @@
 const _ = require('lodash');
 
 let clients = [];
+let broadcasting;
 
 function Client(uuid, name) {
     this.uuid = uuid;
     this.name = name;
 
     this.compare = (other) => {
-        return this.uuid === other.uuid;
+        return other && this.uuid === other.uuid;
     };
 
     this.addPort = function(role, port, address) {
@@ -21,7 +22,11 @@ function Client(uuid, name) {
                 address: address
             };
         }
-    }
+    };
+
+    this.isBroadcasting = function() {
+        return this.compare(broadcasting);
+    };
 }
 
 function getBySocket(socket) {
@@ -30,9 +35,14 @@ function getBySocket(socket) {
     });
 }
 
-module.exports.clients = clients;
+function getByPortAddress(port, address, role) {
+    return _.find(clients, (curr) => {
+        let connection = curr[role];
+        return connection && connection.port === port && connection.address === address;
+    });
+}
 
-module.exports.createClient = function(uuid, name, role, port, address) {
+function createClient(uuid, name, role, port, address) {
     let client = _.find(clients, (curr) => {
         return curr.uuid === uuid;
     });
@@ -56,9 +66,9 @@ module.exports.createClient = function(uuid, name, role, port, address) {
     console.log("++ # of clients: " + clients.length);
 
     return client;
-};
+}
 
-module.exports.removeClient = function(socket) {
+function removeClient(socket) {
     let client = getBySocket(socket);
 
     if (client) {
@@ -67,6 +77,37 @@ module.exports.removeClient = function(socket) {
     }
 
     console.log("-- # of clients: " + clients.length);
-};
+}
+
+function setBroadcasting(client) {
+    if (broadcasting)
+        return false;
+
+    broadcasting = client;
+
+    return true;
+}
+
+function releaseBroadcast(client) {
+    if (!client.compare(broadcasting)) {
+        return false;
+    }
+
+    broadcasting = undefined;
+
+    return true;
+}
+
+module.exports.clients = clients;
+
+module.exports.createClient = createClient;
+
+module.exports.removeClient = removeClient;
 
 module.exports.getBySocket = getBySocket;
+
+module.exports.getByPortAddress = getByPortAddress;
+
+module.exports.setBroadcasting = setBroadcasting;
+
+module.exports.releaseBroadcast = releaseBroadcast ;

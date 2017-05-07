@@ -18,8 +18,10 @@ function UDP(port, role) {
     server.on('message', (msg, rinfo) => {
         // console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
 
-        let client = addClient(msg, rinfo.port, rinfo.address);
-        broadcast(msg,client);
+        let curr_client = addClient(msg, rinfo.port, rinfo.address);
+
+        if (curr_client.isBroadcasting())
+            broadcast(msg, curr_client);
     });
 
     server.on('listening', () => {
@@ -27,10 +29,10 @@ function UDP(port, role) {
         console.log(`UDP server listening on port ${address.port}`);
     });
 
-    function broadcast(message, client) {
+    function broadcast(message, curr_client) {
         clients.forEach((curr, index) => {
 
-            if (curr.compare(client))
+            if (curr.compare(curr_client))
                 return;
 
             let socket = curr[role];
@@ -52,18 +54,17 @@ function UDP(port, role) {
 
     function addClient(msg, port, address) {
         let data;
-        let new_client;
 
         try {
             data = JSON.parse(msg);
         } catch (err) {}
 
         if (data && data.uuid) {
-            console.log("adding " + role + " data to client: " + data.uuid);
-            new_client = client.createClient(data.uuid, undefined, role, port, address);
+            console.log(role + " data received for client: " + data.uuid);
+            return client.createClient(data.uuid, undefined, role, port, address);
         }
 
-        return new_client;
+        return client.getByPortAddress(port, address, role);
     }
 
     server.bind(port);
