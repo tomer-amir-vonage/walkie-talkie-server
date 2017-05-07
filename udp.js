@@ -35,12 +35,16 @@ function UDP(port, role) {
 
             let socket = curr[role];
 
+            // Check if client has finished connecting
+            if (!role)
+                return;
+
             server.send(message, socket.port, socket.address, (err) => {
                 if (!err) {
                     return;
                 }
 
-                console.log(err);
+                console.error("UDP ERROR: ", err);
                 clients.splice(index, 1);
             });
         });
@@ -55,7 +59,7 @@ function UDP(port, role) {
         } catch (err) {}
 
         if (data && data.uuid) {
-            console.log("adding data to client: " + data.uuid);
+            console.log("adding " + role + " data to client: " + data.uuid);
             new_client = client.createClient(data.uuid, undefined, role, port, address);
         }
 

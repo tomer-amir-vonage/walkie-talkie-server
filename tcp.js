@@ -58,7 +58,7 @@ function Tcp(port) {
                     socket.write(JSON.stringify(new Response('login', 'ok', 'Welcome ' + request.name)));
                     break;
                 case 'broadcast':
-                    broadcast(data, socket);
+                    broadcast(data, client.getBySocket(socket));
                     break;
                 default:
                     break;
@@ -73,12 +73,12 @@ function Tcp(port) {
 
         // Send a message to all clients
         function broadcast(message, sender) {
-            console.log(sender.name + "> " + message);
+            console.log(sender.name + " > " + message);
 
-            clients.forEach(function (client) {
+            clients.forEach(function (curr) {
                 // Don't want to send it to sender
-                if (client === sender) return;
-                client.write(message);
+                if (curr.compare(sender)) return;
+                curr.tcp.write(message);
             });
 
             // Log it to the server output too

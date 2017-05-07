@@ -39,6 +39,10 @@ module.exports.createClient = function(uuid, name, role, port, address) {
 
     if (client) {
         client.addPort(role, port, address);
+
+        if (name)
+            client.name = name;
+
         return client;
     }
 
@@ -59,7 +63,7 @@ module.exports.removeClient = function(socket) {
 
     if (client) {
         console.log("Client disconnecting: " + client.uuid);
-        clients.splice(client);
+        clients.splice(client, 1);
     }
 
     console.log("-- # of clients: " + clients.length);
