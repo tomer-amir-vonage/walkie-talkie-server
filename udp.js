@@ -1,14 +1,14 @@
 'use strict';
 
 const _ = require('lodash');
-const Client = require('./client')
+const client = require('./client');
 
-function UDP(port) {
+const clients = client.clients;
+
+function UDP(port, role) {
 
     const dgram = require('dgram');
     const server = dgram.createSocket('udp4');
-
-    let clients = [];
 
     server.on('error', (err) => {
         console.log(`server error:\n${err.stack}`);
@@ -18,7 +18,7 @@ function UDP(port) {
     server.on('message', (msg, rinfo) => {
         console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
 
-        let client = addClient(rinfo.port, rinfo.address);
+        let client = addClient(msg, rinfo.port, rinfo.address);
         broadcast(msg,client);
     });
 
@@ -33,7 +33,9 @@ function UDP(port) {
             if (curr.compare(client))
                 return;
 
-            server.send(message, curr.port, curr.address, (err) => {
+            let socket = curr[role];
+
+            server.send(message, socket.port, socket.address, (err) => {
                 if (!err) {
                     return;
                 }
@@ -44,16 +46,19 @@ function UDP(port) {
         });
     }
 
-    function addClient(port, address) {
-        let client = new Client(port, address);
+    function addClient(msg, port, address) {
+        let data;
+        let new_client;
 
-        if (_.find(clients, (curr) => curr.compare(client))) {
-            return client;
+        try {
+            data = JSON.parse(msg);
+        } catch (err) {}
+
+        if (data && data.uuid) {
+            new_client = client.createClient(data.uuid, undefined, role, port, address);
         }
 
-        clients.push(client);
-
-        return client;
+        return new_client;
     }
 
     server.bind(port);

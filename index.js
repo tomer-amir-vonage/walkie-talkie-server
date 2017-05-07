@@ -1,7 +1,7 @@
 'use strict';
 
-const Tcp = require('./tcp')
-const Udp = require('./udp')
+const Tcp = require('./tcp');
+const Udp = require('./udp');
 
 // TCP Sockets
 const tcp = new Tcp(6000);
