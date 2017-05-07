@@ -1,15 +1,7 @@
 'use strict';
 
 const _ = require('lodash');
-
-function Client(port, address) {
-    this.port = port;
-    this.address = address;
-
-    this.compare = (other) => {
-        return this.port === other.port && this.address === other.address;
-    }
-}
+const Client = require('./client')
 
 function UDP(port) {
 
@@ -32,7 +24,7 @@ function UDP(port) {
 
     server.on('listening', () => {
         let address = server.address();
-        console.log(`server listening ${address.address}:${address.port}`);
+        console.log(`UDP server listening on port ${address.port}`);
     });
 
     function broadcast(message, client) {
