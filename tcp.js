@@ -32,66 +32,84 @@ function Tcp(port) {
 
         // Handle incoming messages from clients.
         socket.on('data', function (data) {
-            if ((data + "").startsWith('PUT / HTTP/1.1')) {
-                return;
-            }
+            // if ((data + "").startsWith('PUT / HTTP/1.1')) {
+            //     return;
+            // }
 
-            let request;
-            let curr_client = client.getBySocket(socket);
+            let raw_data = data + "";
 
-            try {
-                request = JSON.parse(data);
-            } catch (err) {
-                console.error('could not parse client message:', err);
-                socket.write(new Response('', 'error', 'Request - \'' + data + '\' is not a valid JSON').getString());
+            let start = 0;
+            let end = 0;
 
-                return;
-            }
+            while (end > -1) {
+                start = raw_data.indexOf("{");
+                end = raw_data.indexOf("}") + 1;
 
-            switch (request.request) {
-                case 'login':
-                    if (!request.uuid) {
-                        console.error('missing field - uuid in: ' + data);
-                        socket.write(new Response('login', 'error', 'missing field \'uuid\' in: ' + data).getString());
-                        return;
-                    }
-
-                    if (!request.name) {
-                        console.error('missing field - name in: ' + data);
-                        socket.write(new Response('login', 'error', 'missing field \'name\' in: ' + data).getString());
-                        return;
-                    }
-
-                    client.createClient(request.uuid, request.name, 'tcp', socket);
-
-                    // Send a nice welcome message and announce
-                    socket.write(new Response('login', 'ok', 'Welcome ' + request.name).getString());
-
-                    let broadcasting = client.getBroadcasting();
-
-                    if (broadcasting)
-                        socket.write(new Response('', '', broadcasting.name, 'broadcast_start').getString());
-
+                if (start === -1 || end - 1 === -1) {
                     break;
+                }
 
-                case 'broadcast_start':
-                    if (!client.setBroadcasting(curr_client)) {
-                        socket.write(new Response('broadcast_start', 'error', 'broadcast taken').getString());
-                        return;
-                    }
+                data = raw_data.substr(start, end - start);
 
-                    socket.write(new Response('broadcast_start', 'ok').getString());
-                    broadcast(new Response('', '', curr_client.name, 'broadcast_start').getString(), curr_client);
+                raw_data = raw_data.slice(end);
 
-                    break;
+                let request;
+                let curr_client = client.getBySocket(socket);
 
-                case 'broadcast_end':
-                    if (client.releaseBroadcast(curr_client))
-                        broadcast(new Response('', '', curr_client.name, 'broadcast_end').getString(), curr_client);
+                try {
+                    request = JSON.parse(data);
+                } catch (err) {
+                    console.error('could not parse client message:', err);
+                    socket.write(new Response('', 'error', 'Request - \'' + data + '\' is not a valid JSON').getString());
 
-                    break;
-                default:
-                    break;
+                    return;
+                }
+
+                switch (request.request) {
+                    case 'login':
+                        if (!request.uuid) {
+                            console.error('missing field - uuid in: ' + data);
+                            socket.write(new Response('login', 'error', 'missing field \'uuid\' in: ' + data).getString());
+                            return;
+                        }
+
+                        if (!request.name) {
+                            console.error('missing field - name in: ' + data);
+                            socket.write(new Response('login', 'error', 'missing field \'name\' in: ' + data).getString());
+                            return;
+                        }
+
+                        client.createClient(request.uuid, request.name, 'tcp', socket);
+
+                        // Send a nice welcome message and announce
+                        socket.write(new Response('login', 'ok', 'Welcome ' + request.name).getString());
+
+                        let broadcasting = client.getBroadcasting();
+
+                        if (broadcasting)
+                            socket.write(new Response('', '', broadcasting.name, 'broadcast_start').getString());
+
+                        break;
+
+                    case 'broadcast_start':
+                        if (!client.setBroadcasting(curr_client)) {
+                            socket.write(new Response('broadcast_start', 'error', 'broadcast taken').getString());
+                            return;
+                        }
+
+                        socket.write(new Response('broadcast_start', 'ok').getString());
+                        broadcast(new Response('', '', curr_client.name, 'broadcast_start').getString(), curr_client);
+
+                        break;
+
+                    case 'broadcast_end':
+                        if (client.releaseBroadcast(curr_client))
+                            broadcast(new Response('', '', curr_client.name, 'broadcast_end').getString(), curr_client);
+
+                        break;
+                    default:
+                        break;
+                }
             }
         });
 
