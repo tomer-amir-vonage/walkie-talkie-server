@@ -23,7 +23,7 @@ function UDP(port, role) {
 
         let curr_client = addClient(msg, rinfo.port, rinfo.address);
 
-        if (curr_client.isBroadcasting())
+        // if (curr_client.isBroadcasting())
             broadcast(msg, curr_client);
     });
 

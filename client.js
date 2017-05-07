@@ -86,6 +86,7 @@ function setBroadcasting(client) {
         return false;
 
     broadcasting = client;
+    console.log('set broadcasting: ' + client.name);
 
     return true;
 }
@@ -96,6 +97,8 @@ function releaseBroadcast(client) {
     }
 
     broadcasting = undefined;
+
+    console.log('release broadcasting: ' + client.name);
 
     return true;
 }
