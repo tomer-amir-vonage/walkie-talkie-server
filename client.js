@@ -73,7 +73,7 @@ function createClient(uuid, name, role, port, address) {
 function removeClient(client) {
     if (client) {
         console.log("Client disconnecting: " + client.uuid);
-        clients.splice(client, 1);
+        clients.splice(clients.indexOf(client), 1);
     } else {
         console.error('client is undefined');
     }
