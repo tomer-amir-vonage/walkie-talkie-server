@@ -2,4 +2,4 @@
 
 git pull
 
-npm start
+npm install

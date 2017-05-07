@@ -1,8 +1,14 @@
 'use strict';
 
+const _ = require('lodash');
+
 function Client(port, address) {
     this.port = port;
     this.address = address;
+
+    this.compare = (other) => {
+        return this.port === other.port && this.address === other.address;
+    }
 }
 
 function UDP(port) {
@@ -32,7 +38,7 @@ function UDP(port) {
     function broadcast(message, client) {
         clients.forEach((curr, index) => {
 
-            if (curr.address === client.address && curr.port === client.port)
+            if (curr.compare(client))
                 return;
 
             server.send(message, curr.port, curr.address, (err) => {
@@ -48,6 +54,11 @@ function UDP(port) {
 
     function addClient(port, address) {
         let client = new Client(port, address);
+
+        if (_.find(clients, (curr) => curr.compare(client))) {
+            return client;
+        }
+
         clients.push(client);
 
         return client;
