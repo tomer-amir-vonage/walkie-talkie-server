@@ -7,5 +7,5 @@ const Udp = require('./udp');
 const tcp = new Tcp(6000);
 
 // UDP Sockets
-const rtp = new Udp(6001);
-const rtcp = new Udp(6002);
+const rtp = new Udp(6001, 'rtp');
+const rtcp = new Udp(6002, 'rtcp');

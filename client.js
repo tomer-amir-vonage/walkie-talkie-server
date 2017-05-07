@@ -5,11 +5,11 @@ const _ = require('lodash');
 let clients = [];
 
 function Client(uuid, name) {
-    this.uuid       = uuid;
-    this.name       = name;
+    this.uuid = uuid;
+    this.name = name;
 
     this.compare = (other) => {
-        return this.port === other.port && this.address === other.address;
+        return this.uuid === other.uuid;
     };
 
     this.addPort = function(role, port, address) {

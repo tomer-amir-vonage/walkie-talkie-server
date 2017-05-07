@@ -16,7 +16,7 @@ function UDP(port, role) {
     });
 
     server.on('message', (msg, rinfo) => {
-        console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+        // console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
 
         let client = addClient(msg, rinfo.port, rinfo.address);
         broadcast(msg,client);
@@ -55,6 +55,7 @@ function UDP(port, role) {
         } catch (err) {}
 
         if (data && data.uuid) {
+            console.log("adding data to client: " + data.uuid);
             new_client = client.createClient(data.uuid, undefined, role, port, address);
         }
 
