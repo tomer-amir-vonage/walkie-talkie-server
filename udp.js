@@ -21,10 +21,16 @@ function UDP(port, role) {
             return;
         }
 
-        let curr_client = addClient(msg, rinfo.port, rinfo.address);
+        let data;
+
+        try {
+            data = JSON.parse(msg);
+        } catch (err) {}
+
+        let curr_client = addClient(data, rinfo.port, rinfo.address);
 
         // TODO: uncomment
-        // if (curr_client.isBroadcasting())
+        if (!data)//curr_client.isBroadcasting())
             broadcast(msg, curr_client);
     });
 
@@ -57,12 +63,7 @@ function UDP(port, role) {
         });
     }
 
-    function addClient(msg, port, address) {
-        let data;
-
-        try {
-            data = JSON.parse(msg);
-        } catch (err) {}
+    function addClient(data, port, address) {
 
         if (data && data.uuid) {
             console.log(role + " data received for client: " + data.uuid);
