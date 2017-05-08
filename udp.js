@@ -49,7 +49,7 @@ function UDP(port, role) {
             let socket = curr[role];
 
             // Check if client has finished connecting
-            if (!role)
+            if (!role || !socket)
                 return;
 
             server.send(message, socket.port, socket.address, (err) => {
