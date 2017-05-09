@@ -29,8 +29,7 @@ function UDP(port, role) {
 
         let curr_client = addClient(data, rinfo.port, rinfo.address);
 
-        // TODO: uncomment
-        if (!data)//curr_client.isBroadcasting())
+        if (!data && curr_client.isBroadcasting())
             broadcast(msg, curr_client);
     });
 
@@ -45,9 +44,8 @@ function UDP(port, role) {
     function broadcast(message, curr_client) {
         clients.forEach((curr, index) => {
 
-            // TODO: uncomment
-            // if (curr.compare(curr_client))
-            //     return;
+            if (curr.compare(curr_client))
+                return;
 
             let socket = curr[role];
 
