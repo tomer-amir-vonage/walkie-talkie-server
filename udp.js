@@ -39,6 +39,9 @@ function UDP(port, role) {
         console.log(`UDP server listening on port ${address.port}`);
     });
 
+    let sending = false;
+    let message_queue = [];
+
     function broadcast(message, curr_client) {
         clients.forEach((curr, index) => {
 
@@ -52,14 +55,31 @@ function UDP(port, role) {
             if (!role || !socket)
                 return;
 
-            server.send(message, socket.port, socket.address, (err) => {
-                if (!err) {
-                    return;
-                }
+            message_queue.push({ message: message, port: socket.port, address: socket.address, index: index });
 
-                console.error("UDP ERROR: ", err);
-                clients.splice(index, 1);
-            });
+            if (!sending) {
+                sending = true;
+                sendMessages();
+            }
+        });
+    }
+
+    function sendMessages() {
+        let message = message_queue.splice(-1,1)[0];
+
+        if (!message) {
+            sending = false;
+            return;
+        }
+
+        server.send(message.message, message.port, message.address, (err) => {
+            if (!err) {
+                sendMessages();
+                return;
+            }
+
+            console.error("UDP ERROR: ", err);
+            clients.splice(message.index, 1);
         });
     }
 
